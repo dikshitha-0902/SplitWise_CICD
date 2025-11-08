@@ -14,26 +14,24 @@ pipeline {
       }
     }
 
-    stage('Build') {
-      steps {
-        bat 'npm run build'
-      }
-    }
-
     stage('Run Application') {
       steps {
-        // start the app in a new background window
-        bat 'start cmd /c "npm start"'
+        // Start the dev server and open in browser
+        bat '''
+          start cmd /c "npm run dev"
+          timeout /t 8 >nul
+          start http://localhost:3000
+        '''
       }
     }
   }
 
   post {
     success {
-      echo "✅ Application started successfully!"
+      echo "✅ Dev server started and browser opened!"
     }
     failure {
-      echo "❌ Build failed. Check logs."
+      echo "❌ Something went wrong. Check logs."
     }
   }
 }
