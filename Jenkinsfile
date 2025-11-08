@@ -20,7 +20,7 @@ pipeline {
         bat '''
           start cmd /c "npm run dev"
           timeout /t 8 >nul
-          start http://localhost:3000
+          start http://localhost:5174
         '''
       }
     }
