@@ -1,59 +1,7 @@
-/*
-  # Expense Sharing App Database Schema
+-- Enable pgcrypto (required for gen_random_uuid)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-  1. New Tables
-    - `users`
-      - `id` (uuid, primary key)
-      - `name` (text)
-      - `email` (text, unique)
-      - `avatar` (text, optional)
-      - `created_at` (timestamp)
-    
-    - `groups`
-      - `id` (uuid, primary key)
-      - `name` (text)
-      - `description` (text, optional)
-      - `created_at` (timestamp)
-    
-    - `group_members`
-      - `id` (uuid, primary key)
-      - `group_id` (uuid, foreign key)
-      - `user_id` (uuid, foreign key)
-      - `joined_at` (timestamp)
-    
-    - `expenses`
-      - `id` (uuid, primary key)
-      - `group_id` (uuid, foreign key)
-      - `description` (text)
-      - `amount` (numeric)
-      - `paid_by_user_id` (uuid, foreign key)
-      - `split_type` (text, 'equal' or 'custom')
-      - `category` (text)
-      - `date` (timestamp)
-      - `created_at` (timestamp)
-    
-    - `expense_participants`
-      - `id` (uuid, primary key)
-      - `expense_id` (uuid, foreign key)
-      - `user_id` (uuid, foreign key)
-      - `amount_owed` (numeric)
-      - `created_at` (timestamp)
-    
-    - `activities`
-      - `id` (uuid, primary key)
-      - `type` (text)
-      - `description` (text)
-      - `amount` (numeric, optional)
-      - `user_id` (uuid, foreign key)
-      - `group_id` (uuid, foreign key, optional)
-      - `timestamp` (timestamp)
-
-  2. Security
-    - Enable RLS on all tables
-    - Add policies for authenticated users to manage their own data
-*/
-
--- Users table
+-- USERS TABLE
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -75,7 +23,7 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
--- Groups table
+-- GROUPS TABLE
 CREATE TABLE IF NOT EXISTS groups (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -85,7 +33,7 @@ CREATE TABLE IF NOT EXISTS groups (
 
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 
--- Group members table (create before policies reference it)
+-- GROUP MEMBERS TABLE
 CREATE TABLE IF NOT EXISTS group_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id uuid REFERENCES groups(id) ON DELETE CASCADE NOT NULL,
@@ -96,7 +44,7 @@ CREATE TABLE IF NOT EXISTS group_members (
 
 ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 
--- Now create groups policies
+-- GROUP POLICIES
 CREATE POLICY "Users can view groups they are members of"
   ON groups FOR SELECT
   TO authenticated
@@ -113,7 +61,7 @@ CREATE POLICY "Authenticated users can create groups"
   TO authenticated
   WITH CHECK (true);
 
--- Group members policies
+-- GROUP MEMBERS POLICIES
 CREATE POLICY "Users can view group members for their groups"
   ON group_members FOR SELECT
   TO authenticated
@@ -136,7 +84,7 @@ CREATE POLICY "Group members can add other members"
     )
   );
 
--- Expenses table
+-- EXPENSES TABLE
 CREATE TABLE IF NOT EXISTS expenses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id uuid REFERENCES groups(id) ON DELETE CASCADE NOT NULL,
@@ -173,7 +121,7 @@ CREATE POLICY "Group members can create expenses"
     )
   );
 
--- Expense participants table
+-- EXPENSE PARTICIPANTS TABLE
 CREATE TABLE IF NOT EXISTS expense_participants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   expense_id uuid REFERENCES expenses(id) ON DELETE CASCADE NOT NULL,
@@ -209,7 +157,7 @@ CREATE POLICY "Group members can add expense participants"
     )
   );
 
--- Activities table
+-- ACTIVITIES TABLE
 CREATE TABLE IF NOT EXISTS activities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   type text NOT NULL CHECK (type IN ('expense_added', 'payment_made', 'group_created')),
@@ -239,7 +187,7 @@ CREATE POLICY "Authenticated users can create activities"
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
--- Create indexes for better performance
+-- INDEXES
 CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_group_id ON expenses(group_id);
