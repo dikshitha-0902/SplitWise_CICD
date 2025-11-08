@@ -20,19 +20,20 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Run Application') {
       steps {
-        echo 'Simulating deploy step...'
+        // start the app in a new background window
+        bat 'start cmd /c "npm start"'
       }
     }
   }
 
   post {
     success {
-      echo "✅ Pipeline completed successfully!"
+      echo "✅ Application started successfully!"
     }
     failure {
-      echo "❌ Pipeline failed. Check logs."
+      echo "❌ Build failed. Check logs."
     }
   }
 }
