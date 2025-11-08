@@ -28,7 +28,7 @@ pipeline {
 
   post {
     success {
-      echo "✅ Jenkins pipeline completed. App should be on http://localhost:5174"
+      echo "✅ Jenkins pipeline completed. App should be on http://localhost:5173"
     }
     failure {
       echo "❌ Pipeline failed. Check logs."
