@@ -16,11 +16,11 @@ pipeline {
 
     stage('Run Application') {
       steps {
-        // Start the dev server and open in browser
+        echo "🚀 Starting Vite dev server..."
         bat '''
-          start cmd /c "npm run dev"
-          timeout /t 8 >nul
-          start http://localhost:5174
+          start /b cmd /c "npm run dev > server.log 2>&1"
+          timeout /t 5
+          type server.log
         '''
       }
     }
@@ -28,10 +28,10 @@ pipeline {
 
   post {
     success {
-      echo "✅ Dev server started and browser opened!"
+      echo "✅ Jenkins pipeline completed. App should be on http://localhost:5174"
     }
     failure {
-      echo "❌ Something went wrong. Check logs."
+      echo "❌ Pipeline failed. Check logs."
     }
   }
 }
